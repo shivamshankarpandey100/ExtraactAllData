@@ -27,14 +27,13 @@ public class ExtractedData {
     public static class FamilyMember {
         private String name;
         private String rishta;
-        private String samman_suchak_shabd;
+
 
         public FamilyMember() {}
 
-        public FamilyMember(String name, String rishta, String samman_suchak_shabd) {
+        public FamilyMember(String name, String rishta) {
             this.name = name;
             this.rishta = rishta;
-            this.samman_suchak_shabd = samman_suchak_shabd;
         }
     }
 
@@ -42,22 +41,13 @@ public class ExtractedData {
     public static class LocationDetails {
         private String jila;
         private String tahsil;
-        private String station;
-        private String dakghar;
-        private String shahar_gaon;
-        private String kis_sthan_se;
     }
 
     @Data
     public static class PersonalDetails {
         private String jati;
         private String upjati;
-        private String vyaktigat_pehchan;
-        private String diya_gaya_naam;
-        private String upnaam;
-        private String sambandh;
         private String ling;
-        private String parivarik_pehchan;
     }
 
     @Data

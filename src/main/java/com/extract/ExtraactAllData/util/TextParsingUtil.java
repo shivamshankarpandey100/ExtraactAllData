@@ -15,8 +15,11 @@ import java.util.regex.Pattern;
 public class TextParsingUtil {
 
     private static final Pattern DATE_PATTERN = Pattern.compile("\\d{1,2}[-./]\\d{1,2}[-./]\\d{2,4}");
-    private static final Pattern LOCATION_PATTERN = Pattern.compile(
-            "(?:(?:[का|के|की]\\s+)?(?:वासी|निवासी|निवास स्थान|स्थानिक|स्थायी\\s+पता)\\s*)([^\\s,।]+)"
+    private static final Pattern JILA_PATTERN = Pattern.compile(
+            "(?:(?:[का|के|की]\\s+)?(?:वासी|निवासी|निवास स्थान|स्थानिक|स्थायी\\s+पता|जिला)\\s*)([^\\s,।]+)"
+    );
+    private static final Pattern TAHSIL_PATTERN = Pattern.compile(
+            "(?:(?:[का|के|की]\\s+)?(?:वासी|निवासी|निवास स्थान|स्थानिक|स्थायी\\s+पता|तहसील)\\s*)([^\\s,।]+)"
     );
     private static final Pattern PRA_NAME_PATTERN = Pattern.compile(
             "(?:प्रा[०|0|।.\\s]*|प्रार्थी\\s+|संबोधित\\s+)([^\\s,।]+(?:\\s+[^\\s,।]+){0,1})"
@@ -61,6 +64,10 @@ private static final Pattern DADA_NAME_PATTERN = Pattern.compile(
                 // Grandson terms (पोता) with misspellings
                 "पोता|पोत्ता|पोत|पोत्|पोटा|पोट|पोट्टा|पोतर|पोत्र|पोतार|पोतरा|पोतरि|पोतरी|" +
 
+                // Additional grandson terms
+                "नाती|नाति|नातिनी|नातिन|" + // Nati, Natin, Natinni
+                "नात|नाति|नाति|नातिन|" + // Naat, Naatin
+
                 // Granddaughter terms (पोती) with misspellings
                 "पोती|पोत्ती|पोटी|पोटि|पोट्टी|पोतियाँ|पोतियां|" +
 
@@ -89,32 +96,68 @@ private static final Pattern DADA_NAME_PATTERN = Pattern.compile(
 
     private static final Pattern CASTE_PATTERN = Pattern.compile(
             "(?<!\\S)(" +
-                    "कुरमी|कुर्मी|" +
-                    "भूमिहार|" +
-                    "नापित|नाई|" +
-                    "कुम्हार|प्रजापति|" +
-                    "महतो|महतो|" +
-                    "सोनार|सुनार|स्वर्णकार|सोनी|" +
-                    "ब्राह्मण|पंडित|" +
-                    "ठाकुर|राजपूत|" +
-                    "यादव|अहीर|" +
-                    "कोयरी|कोरी|" +
-                    "जाट|" +
-                    "चमार|दलित|हरिजन|जScheduled Caste|अनुसूचित जाति|" +
-                    "ओबीसी|अन्य पिछड़ा वर्ग|" +
-                    "बनिया|वैश्य|" +
-                    "मुस्लिम|इस्लाम|" +
-                    "सिख|" +
-                    "ईसाई|क्रिश्चियन|" +
-                    "जैन|" +
-                    "बौद्ध|" +
-                    "SC|ST|OBC|" +
-                    "मीणा|भील|गोंड|संथाल|मुंडा" +
+    // Main castes (जाति) with common abbreviations
+                "कुरमी|कुर्मी|" +
+                        "भूमिहार|" +
+                        "नापित|नाई|" +
+                        "कुम्हार|प्रजापति|" +
+                        "महतो|महतो|" +
+                        "सोनार|सुनार|स्वर्णकार|सोनी|" +
+                        "ब्राह्मण|ब्रा\\.|पंडित|" +  // Brahmin and its abbreviation
+                        "ठाकुर|राजपूत|" +
+                        "यादव|अहीर|" +
+                        "कोयरी|कोरी|" +
+                        "जाट|" +
+                        "चमार|चं.|च|" +  // Chamar and its abbreviations
+                        "दलित|हरिजन|" +
+                        "अनुसूचित जाति|SC|" +  // Scheduled Caste
+                        "ओबीसी|अन्य पिछड़ा वर्ग|" +
+                        "बनिया|वैश्य|" +
+                        "मुस्लिम|इस्लाम|" +
+                        "सिख|" +
+                        "ईसाई|क्रिश्चियन|" +
+                        "जैन|" +
+                        "बौद्ध|" +
+                        "मीणा|भील|गोंड|संथाल|मुंडा|" +  // Additional castes
+                        // Adding previous suggested caste patterns
+                        "महतो|महतो|" +  // Duplicate for emphasis
+                        "कुर्मी|कुरमी|" +
+                        "सुपर|सुपर|सुपर|" +
+                        ")(?!\\S)"
+                        );
+
+    private static final Pattern SUB_CASTE_PATTERN = Pattern.compile(
+            "(?<!\\S)(" +
+                    // Sub-castes for ब्राह्मण (Brahmin)
+                    "पाठक|मिश्र|तिवारी|शुक्ल|दिवेदी|त्रिवेदी|गुप्ता|" +  // Common Brahmin sub-castes
+                    // Sub-castes for राजपूत (Rajput)
+                    "राजपूत|सिसोदिया|राठौर|चौहान|सिंह|सिंहासन|" +  // Common Rajput sub-castes
+                    // Sub-castes for यादव (Yadav)
+                    "यादव|अहीर|लोधी|गुर्जर|कुशवाहा|" +  // Common Yadav sub-castes
+                    // Sub-castes for ठाकुर (Thakur)
+                    "ठाकुर|ठाकुराना|ठाकुरिया|सिंह|" +  // Common Thakur sub-castes
+                    // Sub-castes for चमार (Chamar)
+                    "चमार|चं.|च|धनक|धनक चमार|धनक|" +  // Common Chamar sub-castes
+                    // Sub-castes for कुर्मी (Kurmi)
+                    "कुर्मी|कुर्मि|कुर्मा|कुर्मा|" +  // Common Kurmi sub-castes
+                    // Sub-castes for भूमिहार (Bhumihar)
+                    "भूमिहार|भूमिहारी|भूमिहारी|" +  // Common Bhumihar sub-castes
+                    // Sub-castes for मुस्लिम (Muslim)
+                    "मुस्लिम|सैयद|अंसारी|खान|" +  // Common Muslim sub-castes
+                    // Sub-castes for सिख (Sikh)
+                    "सिख|जट्ट|सिंह|" +  // Common Sikh sub-castes
+                    // Sub-castes for जैन (Jain)
+                    "जैन|श्वेतांबर|दिगंबर|" +  // Common Jain sub-castes
+                    // Sub-castes for बौद्ध (Buddhist)
+                    "बौद्ध|बौद्ध धर्म|" +  // Common Buddhist sub-castes
+                    // Add more sub-castes as needed
                     ")(?!\\S)"
     );
 
 
-private static final Pattern RITUAL_NAME_PATTERN = Pattern.compile(
+
+
+    private static final Pattern RITUAL_NAME_PATTERN = Pattern.compile(
         "(?:" +
                 // Prefix patterns
                 "(?:अनुष्ठान\\s*(?:का\\s*नाम)?|कर्मकांड|क्रिया|धार्मिक\\s+कर्म|कर्म)\\s*[:：.]?\\s*" +
@@ -164,9 +207,13 @@ private static final Pattern RITUAL_NAME_PATTERN = Pattern.compile(
                 "श्र[ा]?द्ध[्ी]?" +
                 ")\\b"
 );
+    private static final Pattern LOCATION_DETAIL_PATTERN = Pattern.compile(
+            "(?:(?:[का|के|की]\\s+)?(?:गांव|गाँव|तहसील|जिला|वासी|निवासी|निवास स्थान|स्थानिक|स्थायी\\s+पता)\\s*)([^\\s,।]+)\\s*(?:,\\s*|\\s+)(?:(?:[का|के|की]\\s+)?(?:गांव|गाँव|तहसील|जिला|वासी|निवासी|निवास स्थान|स्थानिक|स्थायी\\s+पता)\\s*)([^\\s,।]+)?\\s*(?:,\\s*|\\s+)(?:(?:[का|के|की]\\s+)?(?:गांव|गाँव|तहसील|जिला|वासी|निवासी|निवास स्थान|स्थानिक|स्थायी\\s+पता)\\s*)([^\\s,।]+)?"
+    );
 
 
-//    private static final Pattern RITUAL_PERSON_PATTERN = Pattern.compile("किसका अनुष्ठान[:：\s]*([^\\n]+)");
+
+    //    private static final Pattern RITUAL_PERSON_PATTERN = Pattern.compile("किसका अनुष्ठान[:：\s]*([^\\n]+)");
 private static final Pattern RITUAL_PERSON_PATTERN = Pattern.compile(
         "(?:" +
                 "(अस्थि\\s*(?:विसर्जन|प्रवाह|लाये)|पिंड\\s*दान|दाह\\s*संस्कार|श्राद्ध|अंत्येष्टि)" +
@@ -177,8 +224,11 @@ private static final Pattern RITUAL_PERSON_PATTERN = Pattern.compile(
                 "(?:\\s+(श्रीमती|श्री|स्व\\.?|स्वर्गीय|माता|पिता|चाचा))?"  // Honorific
 );
 
-    public String extractLocation(String text) {
-        return extractFirstMatch(LOCATION_PATTERN, text);
+    public String extractJila(String text) {
+        return extractFirstMatch(JILA_PATTERN, text);
+    }
+    public String extractTahsil(String text) {
+        return extractFirstMatch(TAHSIL_PATTERN, text);
     }
 
     public String extractPraMainPersonName(String text) {
@@ -201,13 +251,15 @@ private static final Pattern RITUAL_PERSON_PATTERN = Pattern.compile(
         return extractFirstMatch(DADA_NAME_PATTERN, text);
     }
 
-    public String extractDistrict(String text) {
-        if (text.contains("बोकारो")) return "बोकारो";
-        return null;
+    public String extractLocation(String text) {
+        return extractFirstMatch(LOCATION_DETAIL_PATTERN, text);
     }
 
     public String extractCaste(String text) {
         return extractFirstMatch(CASTE_PATTERN, text);
+    }
+    public String extractSubCaste(String text) {
+        return extractFirstMatch(SUB_CASTE_PATTERN , text);
     }
 
     public String extractGender(String text) {

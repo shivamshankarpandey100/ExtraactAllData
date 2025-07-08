@@ -2,6 +2,7 @@ package com.extract.ExtraactAllData.controller;
 
 import com.extract.ExtraactAllData.model.ExtractedData;
 import com.extract.ExtraactAllData.service.DataExtractionService;
+import com.extract.ExtraactAllData.service.TextService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -27,6 +28,14 @@ public class DataExtractionController {
 
         List<ExtractedData> extractedData = dataExtractionService.extractDataFromText(inputText);
         return ResponseEntity.ok(new ApiResponse("SUCCESS", extractedData));
+    }
+
+    @Autowired
+    private TextService textService;
+
+    @PostMapping("/format")
+    public String formatText(@RequestBody String rawText) {
+        return textService.formatInput(rawText);
     }
 
     @GetMapping("/health")
