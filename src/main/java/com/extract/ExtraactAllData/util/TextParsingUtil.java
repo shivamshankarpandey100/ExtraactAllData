@@ -53,42 +53,60 @@ private static final Pattern FATHER_NAME_PATTERN = Pattern.compile(
 //private static final Pattern DADA_NAME_PATTERN = Pattern.compile(
 //        "के\\s+पीता\\s+(?:स्व[०0]\\s*)?([^\\s,।]+(?:\\s*[^\\s,।]+){0,3})(?:\\s+के)?"
 //);
+//private static final Pattern DADA_NAME_PATTERN = Pattern.compile(
+//        "(?:" +
+//                // Main relationship terms with all possible misspellings
+//                "के\\s+" +
+//                "(?:" +
+//                // Grandfather terms (दादा) with misspellings
+//                "दादा|ददा|दाडा|दाद|दाड़ा|दाद्ह|दादह|दादाा|ददा़|" +
+//
+//                // Grandson terms (पोता) with misspellings
+//                "पोता|पोत्ता|पोत|पोत्|पोटा|पोट|पोट्टा|पोतर|पोत्र|पोतार|पोतरा|पोतरि|पोतरी|" +
+//
+//                // Additional grandson terms
+//                "नाती|नाति|नातिनी|नातिन|" + // Nati, Natin, Natinni
+//                "नात|नाति|नाति|नातिन|" + // Naat, Naatin
+//
+//                // Granddaughter terms (पोती) with misspellings
+//                "पोती|पोत्ती|पोटी|पोटि|पोट्टी|पोतियाँ|पोतियां|" +
+//
+//                // Father terms (पिता) with misspellings
+//                "पीता|पिता|पित|पित्|पित्ता|पीत|पिताह|पिताा|पिता़|" +
+//
+//                // Father terms (पिता) with all variants and "के" combinations
+//                "(?:के\\s*पिता|केपिता|kepita|ke-pita|k-pita|के\\s*पीता|केपीता|केपित|केपित्|केपित्ता|केपीत|केपिताह|केपिताा|केपिता़|" +
+//                "पीता|पिता|पित|पित्|पित्ता|पीत|पिताह|पिताा|पिता़)"+
+//
+//
+//        // Grandmother terms (दादी) with misspellings
+//                "दादी|ददी|दाडी|दादि|दाड़ी|दाद्ही|दादही|दादीी|ददी़|" +
+//
+//                // Other variations
+//                "पाता|पाटा|पात|पाट|पात्ता|पाटाह|पाती|पाटी|पाति" +
+//                ")" +
+//                ")" +
+//                "\\s+" +
+//                // Name pattern (with honorifics and common name misspellings)
+//                "(?:" +
+//                "(?:स्व[०0]\\s*)?" +  // Optional honorific
+//                "([\\p{L}०-९]+(?:\\s+[\\p{L}०-९]+){0,9})" +  // Name with Hindi chars and numbers
+//                "(?:\\s*[,\\-।.]*\\s*(?:के|की|का|को|कु)?)?" +  // Optional connectors with punctuation
+//                ")"
+//);
 private static final Pattern DADA_NAME_PATTERN = Pattern.compile(
         "(?:" +
-                // Main relationship terms with all possible misspellings
-                "के\\s+" +
-                "(?:" +
-                // Grandfather terms (दादा) with misspellings
-                "दादा|ददा|दाडा|दाद|दाड़ा|दाद्ह|दादह|दादाा|ददा़|" +
-
-                // Grandson terms (पोता) with misspellings
-                "पोता|पोत्ता|पोत|पोत्|पोटा|पोट|पोट्टा|पोतर|पोत्र|पोतार|पोतरा|पोतरि|पोतरी|" +
-
-                // Additional grandson terms
-                "नाती|नाति|नातिनी|नातिन|" + // Nati, Natin, Natinni
-                "नात|नाति|नाति|नातिन|" + // Naat, Naatin
-
-                // Granddaughter terms (पोती) with misspellings
-                "पोती|पोत्ती|पोटी|पोटि|पोट्टी|पोतियाँ|पोतियां|" +
-
-                // Father terms (पिता) with misspellings
-                "पीता|पिता|पित|पित्|पित्ता|पीत|पिताह|पिताा|पिता़|" +
-
-                // Grandmother terms (दादी) with misspellings
-                "दादी|ददी|दाडी|दादि|दाड़ी|दाद्ही|दादही|दादीी|ददी़|" +
-
-                // Other variations
-                "पाता|पाटा|पात|पाट|पात्ता|पाटाह|पाती|पाटी|पाति" +
-                ")" +
+                // All possible variations of 'के पिता'
+                "(?:के\\s*पिता|केपिता|के\\s*पीता|केपीता|kepita|ke-pita|k-pita|के\\s*पिटा|केपिटा|के\\s*पा|kpita)" +
                 ")" +
                 "\\s+" +
-                // Name pattern (with honorifics and common name misspellings)
                 "(?:" +
-                "(?:स्व[०0]\\s*)?" +  // Optional honorific
-                "([\\p{L}०-९]+(?:\\s+[\\p{L}०-९]+){0,3})" +  // Name with Hindi chars and numbers
-                "(?:\\s*[,\\-।.]*\\s*(?:के|की|का|को|कु)?)?" +  // Optional connectors with punctuation
+                "(?:स्व[०0o]\\s*)?" +  // Optional honorific 'स्व०'
+                "([\\p{IsDevanagari}]{2,}(?:\\s+[\\p{IsDevanagari}]{2,}){0,3})" +  // Full name: 1 to 4 words
                 ")"
 );
+
+
 
 
 
@@ -156,57 +174,78 @@ private static final Pattern DADA_NAME_PATTERN = Pattern.compile(
 
 
 
-
-    private static final Pattern RITUAL_NAME_PATTERN = Pattern.compile(
-        "(?:" +
-                // Prefix patterns
-                "(?:अनुष्ठान\\s*(?:का\\s*नाम)?|कर्मकांड|क्रिया|धार्मिक\\s+कर्म|कर्म)\\s*[:：.]?\\s*" +
-                "|" +
-                // Ritual names with common misspellings/alternate forms
+//
+//    private static final Pattern RITUAL_NAME_PATTERN = Pattern.compile(
+//            "(" +  // ✅ capturing group starts here
+//                    "(?:" +
+//                    // Prefix patterns
+//                    "(?:अनुष्ठान\\s*(?:का\\s*नाम)?|कर्मकांड|अस्ती |क्रिया|धार्मिक\\s+कर्म|कर्म)\\s*[:：.]?\\s*" +
+//                    "|" +
+//                    // Ritual names with common misspellings/alternate forms
+//                    "(?:" +
+//                    "पिंड\\s*(?:दान|दन|दाना|अस्ती |धान|दिया)" +
+//                    "|" +
+//                    "अ[सष]्?[तट]ि\\s*(?:" +
+//                    "विसर्जन|विसरजन|विसर्जन्|बिसर्जन|" +
+//                    "प्रवाह|प्रभाव|परवाह|" +
+//                    "लाय[ेँ]?|लाना|लाया|लये|ली|" +
+//                    "दाह|दह|डाह|दान" +
+//                    ")" +
+//                    "|" +
+//                    "दाह\\s*(?:संस्कार|संसकार|संस्कर|सस्कार|श्राद्ध)" +
+//                    "|" +
+//                    "श्राद्ह|श्राद्ध|स्राद्ध|श्राद|श्रधा|सरद्ध|श्रद्धा" +
+//                    "|" +
+//                    "अंत्येष्टि|अंत्येष्ठि|अन्त्येष्टि|अन्त्येष्ठि|अंतयेष्टी" +
+//                    "|" +
+//                    "सपिंडी|सपिण्डी|सपिन्दी|सपिंडि" +
+//                    "|" +
+//                    "तर्पण|त्रपण|तर्पन|तलपन|तिरपण" +
+//                    "|" +
+//                    "कापर|कार्पर|कापुर|कापा|कपर" +
+//                    "|" +
+//                    "नवग्रह|नबग्रह|नवग्राह|नवग्र|नवगह" +
+//                    "|" +
+//                    "तीर्थ|तिर्थ|तीर्थ्|तीत्थ|तीर्द" +
+//                    "|" +
+//                    "[पप]ूज[ाी]" +
+//                    "|" +
+//                    "हवन|होम|यज्ञ|हवन" +
+//                    "|" +
+//                    "वेद\\s*पाठ|बेद\\s*पाठ|वेदपाठ" +
+//                    "|" +
+//                    "ब्राह्म(?:ण|मन)\\s*भोज|ब्राम्हण\\s*भोज" +
+//                    ")" +
+//                    ")" +
+//                    "(?:\\s+[^,.।\\n]*[,.。।])?" +
+//                    "|" +
+//                    "\\b(?:" +
+//                    "(?:अ[सष]्?[तट]ि\\s*[वब]ि[सश]र्जन)|" +
+//                    "(?:द?[हा]\\s*सं?स्?क[ार])|" +
+//                    "श्र[ा]?द्ध[्ी]?" +
+//                    ")\\b" +
+//                    ")"
+//    );
+private static final Pattern RITUAL_NAME_PATTERN = Pattern.compile(
+        "(" +
+                // अनुष्ठान का नाम
                 "(?:" +
-                "पिंड\\s*(?:दान|दन|दाना|धान|दिया)" +  // Variations of पिंडदान
-                "|" +
-                "अ[स्ष]्?[तट]ि\\s*(?:" +  // Covers अस्थि, अस्ति, अष्टि, etc.
-                "विसर्जन|विसरजन|विसर्जन्|बिसर्जन|" +  // Visarjan variants
-                "प्रवाह|प्रभाव|परवाह|" +  // Pravah variants
-                "लाय[ेँ]?|लाना|लाया|लये|ली|" +  // Laye variants
-                "दाह|दह|डाह|दान" +  // Dah variants
-                ")" +
-                "|" +
-                "दाह\\s*(?:संस्कार|संसकार|संस्कर|सस्कार|श्राद्ध)" +  // Daha sanskar variants
-                "|" +
-                "श्राद्ह|श्राद्ध|स्राद्ध|श्राद|श्रधा|सरद्ध|श्रद्धा" +  // Shraadh variants
-                "|" +
-                "अंत्येष्टि|अंत्येष्ठि|अन्त्येष्टि|अन्त्येष्ठि|अंतयेष्टी" +  // Antyeshti variants
-                "|" +
-                "सपिंडी|सपिण्डी|सपिन्दी|सपिंडि" +  // Sapindi variants
-                "|" +
-                "तर्पण|त्रपण|तर्पन|तलपन|तिरपण" +  // Tarpan variants
-                "|" +
-                "कापर|कार्पर|कापुर|कापा|कपर" +  // Kaapar variants
-                "|" +
-                "नवग्रह|नबग्रह|नवग्राह|नवग्र|नवगह" +  // Navgrah variants
-                "|" +
-                "तीर्थ|तिर्थ|तीर्थ्|तीत्थ|तीर्द" +  // Teerth variants
-                "|" +
-                "[पप]ूज[ाी]" +  // Pooja variations
-                "|" +
-                "हवन|होम|यज्ञ|हवन" +  // Havan variations
-                "|" +
-                "वेद\\s*पाठ|बेद\\s*पाठ|वेदपाठ" +  // Ved path variations
-                "|" +
-                "ब्राह्म(?:ण|मन)\\s*भोज|ब्राम्हण\\s*भोज" +  // Brahmin bhoj variations
+                "अस्ती\\s*लाय[ेेँ]?|" +
+                "अस्तीलाये|" +
+                "पिंड\\s*(?:दान|दिया)|" +
+                "श्राद्ध|श्राद|श्रधा|श्रद्धा|श्राद्ह|स्राद्ध|" +
+                "दाह\\s*(?:संस्कार|श्राद्ध)|" +
+                "हवन|होम|यज्ञ|पूजन|वेद\\s*पाठ|" +
+                "ब्राह्म(?:ण|मन)\\s*भोज|ब्राम्हण\\s*भोज" +
                 ")" +
                 ")" +
-                "(?:\\s+[^,.।\\n]*[,.।])?" +  // Optional text after ritual name until punctuation
-                "|" +
-                // Standalone ritual names without prefix
-                "\\b(?:" +
-                "(?:अ[स्ष]्?[तट]ि\\s*[वब]ि[सश]र्जन)|" +
-                "(?:द?[हा]\\s*सं?स्?क[ार])|" +
-                "श्र[ा]?द्ध[्ी]?" +
-                ")\\b"
+                "\\s+" +  // अनुष्ठान और नाम के बीच एक या अधिक स्पेस
+                "(" +
+                "[\\p{IsDevanagari}]{2,}(?:\\s+[\\p{IsDevanagari}]{2,}){0,3}" + // नाम: 1 से 4 शब्द
+                ")",
+        Pattern.UNICODE_CASE
 );
+
     private static final Pattern LOCATION_DETAIL_PATTERN = Pattern.compile(
             "(?:(?:[का|के|की]\\s+)?(?:गांव|गाँव|तहसील|जिला|वासी|निवासी|निवास स्थान|स्थानिक|स्थायी\\s+पता)\\s*)([^\\s,।]+)\\s*(?:,\\s*|\\s+)(?:(?:[का|के|की]\\s+)?(?:गांव|गाँव|तहसील|जिला|वासी|निवासी|निवास स्थान|स्थानिक|स्थायी\\s+पता)\\s*)([^\\s,।]+)?\\s*(?:,\\s*|\\s+)(?:(?:[का|के|की]\\s+)?(?:गांव|गाँव|तहसील|जिला|वासी|निवासी|निवास स्थान|स्थानिक|स्थायी\\s+पता)\\s*)([^\\s,।]+)?"
     );
@@ -214,15 +253,24 @@ private static final Pattern DADA_NAME_PATTERN = Pattern.compile(
 
 
     //    private static final Pattern RITUAL_PERSON_PATTERN = Pattern.compile("किसका अनुष्ठान[:：\s]*([^\\n]+)");
-private static final Pattern RITUAL_PERSON_PATTERN = Pattern.compile(
-        "(?:" +
-                "(अस्थि\\s*(?:विसर्जन|प्रवाह|लाये)|पिंड\\s*दान|दाह\\s*संस्कार|श्राद्ध|अंत्येष्टि)" +
-                "|(?:कर्म|कापर|नवग्रह|तीर्थ)" +
-                ")" +
-                "(?:\\s+(?:कराया|किया|करवाया|हुआ|कर|करके|कराई))?" +
-                "\\s+([\\p{L}०-९]+(?:\\s+[\\p{L}०-९]+)*)" +  // Person's name
-                "(?:\\s+(श्रीमती|श्री|स्व\\.?|स्वर्गीय|माता|पिता|चाचा))?"  // Honorific
-);
+    private static final Pattern RITUAL_PERSON_PATTERN = Pattern.compile(
+            "(" +
+                    "अस्ती\\s*लाय[ेेँ]?|" +
+                    "अस्थि\\s*विसर्जन|" +
+                    "पिंड\\s*दान|" +
+                    "श्राद्ध|" +
+                    "दाह\\s*संस्कार|" +
+                    "अंत्येष्टि|" +
+                    "हवन|पूजन|यज्ञ|कर्म" +
+                    ")" +
+                    "\\s+" +
+                    "(" +
+                    "(?:माता|पिता|माँ|श्रीमती|श्री|स्व(?:\\.?|र्गीय)?|स्वर्गीय)?" +
+                    "(?:\\s*[\\p{IsDevanagari}०-९]{2,}){1,4}" +
+                    ")"
+    );
+
+
 
     public String extractJila(String text) {
         return extractFirstMatch(JILA_PATTERN, text);

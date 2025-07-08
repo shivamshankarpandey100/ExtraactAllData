@@ -53,8 +53,6 @@ public class ExtractedData {
     @Data
     public static class RitualDetails {
         private String anusthan_ka_naam;
-        private LocalDate anusthanKiTithi1;
-        private LocalDate anusthanKiTithi2;
         private String kiska_anusthan;
     }
 }
