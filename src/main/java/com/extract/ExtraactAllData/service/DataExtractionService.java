@@ -1,5 +1,4 @@
 
-
 package com.extract.ExtraactAllData.service;
 
 import com.extract.ExtraactAllData.model.ExtractedData;
@@ -22,111 +21,162 @@ public class DataExtractionService {
     public List<ExtractedData> extractDataFromText(String inputText) {
         List<ExtractedData> extractedDataList = new ArrayList<>();
 
-        // Split the input text into paragraphs based on triggers
+        // Split the input text into paragraphs representing family blocks or distinct records
         List<String> paragraphs = textParsingUtil.splitIntoParagraphsByTrigger(inputText);
 
-        int fileNo = 1;
+        int dataIndex = 1;
         for (String record : paragraphs) {
             if (record.trim().isEmpty()) continue;
 
-            ExtractedData
-                    data = new ExtractedData();
-            data.setFileNo(String.valueOf(fileNo++));
-            data.setLocation(textParsingUtil.extractLocation(record));
-            data.setMainPersonName(textParsingUtil.extractPraMainPersonName(record));
-            data.setRecordDate(extractLastDate(record));
+            // --- Extract Common/Paragraph-level Data First ---
+            String imageNo = textParsingUtil.extractImageNo(record);
+            String pandaName = textParsingUtil.extractPandaName(record);
+            String bahiName = textParsingUtil.extractBahiName(record);
+            String folioNo = textParsingUtil.extractFolioNo(record);
+            String district = textParsingUtil.extractJila(record);
+            String tehsil = textParsingUtil.extractTahsil(record);
+            String station = textParsingUtil.extractStation(record);
+            String postOffice = textParsingUtil.extractPostOffice(record);
+            String cityVillage = textParsingUtil.extractCityVillage(record);
+            String fromWhichPlace = textParsingUtil.extractFromWhichPlace(record);
+            String caste = textParsingUtil.extractCaste(record);
+            String subcaste = textParsingUtil.extractSubCaste(record);
+            String ritualName = textParsingUtil.extractanusthan_ka_naam(record);
+            String whoseRitual1 = textParsingUtil.extractKiskaAnusthan(record);
+            String whoseRitual2 = textParsingUtil.extractKiskaAnusthan2(record);
+            String contactNo1 = textParsingUtil.extractContactNo1(record);
+            String contactNo2 = textParsingUtil.extractContactNo2(record);
+            String flags = textParsingUtil.extractUnknownTerms(record);
+            String dateOfRitual= textParsingUtil.extractDateOfRitual(record);
 
-            ExtractedData.FamilyDetails familyDetails = new ExtractedData.FamilyDetails();
-            familyDetails.setPitajiKaNaam(textParsingUtil.extractFatherName(record));
-            familyDetails.setDadajiKaNaam(textParsingUtil.extractDadajiName(record));
-            familyDetails.setFamilyMembers(new ArrayList<>());
+            // Extract the date from additional information
+            String rawDateStr = textParsingUtil.extractExtraNotesOrDate(record);
+            LocalDate extractedDate = (rawDateStr != null) ? textParsingUtil.parseDate(rawDateStr) : null;
+            String additionalInfo = (extractedDate != null) ? rawDateStr : null; // Store original date string or other notes
 
-            for (String name : textParsingUtil.extractAllNames(record)) {
-                String relation = textParsingUtil.extractRelation(record, name);
-//                String honorific = textParsingUtil.extractHonorific(name);
-                if (relation != null) {
-                    familyDetails.getFamilyMembers().add(new ExtractedData.FamilyMember(name, relation));
+
+            // --- Extract Individual-specific Data ---
+            List<String> allNamesInRecord = textParsingUtil.extractAllNames(record);
+
+            // Try to find the "prarthi" or main person explicitly
+            String prarthiName = textParsingUtil.extractPraMainPersonName(record);
+
+            if (!allNamesInRecord.isEmpty()) {
+                int individualIDCounter = 1;
+
+                // Prioritize the Prarthi if found
+                if (prarthiName != null && allNamesInRecord.contains(prarthiName)) {
+                    ExtractedData data = createNewExtractedDataInstance(
+                            dataIndex++, imageNo, pandaName, bahiName, folioNo, district, tehsil,
+                            station, postOffice, cityVillage, fromWhichPlace, caste, subcaste,
+                            ritualName, whoseRitual1, whoseRitual2, contactNo1, contactNo2, flags, additionalInfo
+                    );
+                    data.setIndividualID(String.valueOf(individualIDCounter++));
+                    data.setGivenName(textParsingUtil.extractGivenName(prarthiName));
+                    data.setSurname(textParsingUtil.extractSurname(prarthiName));
+                    data.setRelation(textParsingUtil.extractRelation(record, prarthiName));
+                    data.setGender(textParsingUtil.extractGender(record)); // Gender for the whole record for now
+                    extractedDataList.add(data);
+                    allNamesInRecord.remove(prarthiName); // Remove to avoid re-processing
                 }
+
+
+                // Now iterate through remaining names (family members)
+                // Filter out names that are already identified as ritual persons if they're handled
+                List<String> remainingNames = new ArrayList<>(allNamesInRecord);
+                if (whoseRitual1 != null) remainingNames.remove(whoseRitual1);
+                if (whoseRitual2 != null) remainingNames.remove(whoseRitual2);
+
+
+                for (String name : remainingNames) {
+                    ExtractedData data = createNewExtractedDataInstance(
+                            dataIndex++, imageNo, pandaName, bahiName, folioNo, district, tehsil,
+                            station, postOffice, cityVillage, fromWhichPlace, caste, subcaste,
+                            ritualName, whoseRitual1, whoseRitual2, contactNo1, contactNo2, flags, additionalInfo
+                    );
+
+                    data.setIndividualID(String.valueOf(individualIDCounter++));
+                    data.setGivenName(textParsingUtil.extractGivenName(name));
+                    data.setSurname(textParsingUtil.extractSurname(name));
+                    data.setRelation(textParsingUtil.extractRelation(record, name));
+                    data.setGender(textParsingUtil.extractGender(record)); // Gender for the whole record for now
+
+                    extractedDataList.add(data);
+                }
+
+                // If ritual persons were not among other names, add them specifically
+                if (whoseRitual1 != null && !allNamesInRecord.contains(whoseRitual1)) {
+                    ExtractedData data = createNewExtractedDataInstance(
+                            dataIndex++, imageNo, pandaName, bahiName, folioNo, district, tehsil,
+                            station, postOffice, cityVillage, fromWhichPlace, caste, subcaste,
+                            ritualName, whoseRitual1, whoseRitual2, contactNo1, contactNo2, flags, additionalInfo
+                    );
+                    data.setIndividualID(String.valueOf(individualIDCounter++));
+                    data.setGivenName(textParsingUtil.extractGivenName(whoseRitual1));
+                    data.setSurname(textParsingUtil.extractSurname(whoseRitual1));
+                    data.setRelation("मृतक (अनुष्ठान)"); // Explicitly mark as deceased for ritual
+                    data.setGender(textParsingUtil.extractGender(record));
+                    extractedDataList.add(data);
+                }
+                if (whoseRitual2 != null && !allNamesInRecord.contains(whoseRitual2)) {
+                    ExtractedData data = createNewExtractedDataInstance(
+                            dataIndex++, imageNo, pandaName, bahiName, folioNo, district, tehsil,
+                            station, postOffice, cityVillage, fromWhichPlace, caste, subcaste,
+                            ritualName, whoseRitual1, whoseRitual2, contactNo1, contactNo2, flags, additionalInfo
+                    );
+                    data.setIndividualID(String.valueOf(individualIDCounter++));
+                    data.setGivenName(textParsingUtil.extractGivenName(whoseRitual2));
+                    data.setSurname(textParsingUtil.extractSurname(whoseRitual2));
+                    data.setRelation("मृतक (अनुष्ठान)"); // Explicitly mark as deceased for ritual
+                    data.setGender(textParsingUtil.extractGender(record));
+                    extractedDataList.add(data);
+                }
+
+
+            } else {
+                // If no individual names found, add one entry for the family block with common data
+                ExtractedData data = createNewExtractedDataInstance(
+                        dataIndex++, imageNo, pandaName, bahiName, folioNo, district, tehsil,
+                        station, postOffice, cityVillage, fromWhichPlace, caste, subcaste,
+                        ritualName, whoseRitual1, whoseRitual2, contactNo1, contactNo2, flags, additionalInfo
+                );
+                extractedDataList.add(data);
             }
-
-            data.setFamilyDetails(familyDetails);
-
-            ExtractedData.LocationDetails locationDetails = new ExtractedData.LocationDetails();
-            locationDetails.setJila(textParsingUtil.extractJila(record));
-            locationDetails.setTahsil(textParsingUtil.extractTahsil(record));
-            data.setLocationDetails(locationDetails);
-
-            ExtractedData.PersonalDetails personalDetails = new ExtractedData.PersonalDetails();
-            personalDetails.setJati(textParsingUtil.extractCaste(record));
-            personalDetails.setUpjati(textParsingUtil.extractSubCaste(record));
-            personalDetails.setLing(textParsingUtil.extractGender(record));
-            data.setPersonalDetails(personalDetails);
-
-//            data.setRitualDetails(new ExtractedData.RitualDetails()); // Placeholder for ritual details
-            ExtractedData.RitualDetails ritualDetails = new ExtractedData.RitualDetails();
-            ritualDetails.setAnusthan_ka_naam(textParsingUtil.extractanusthan_ka_naam(record));
-            ritualDetails.setKiska_anusthan(textParsingUtil.extractKiskaAnusthan(record)); // If applicable
-            data.setRitualDetails(ritualDetails); // Set the ritual details
-
-
-            extractedDataList.add(data);
         }
 
         return extractedDataList;
     }
 
-    private LocalDate extractLastDate(String text) {
-        // Regex pattern to match Hindi, English, and Sanskrit date formats
-        String datePattern = "(\\d{1,2}[.-/\\s]*\\d{1,2}[.-/\\s]*\\d{2,4}]|" + // English dates
-                "[०-९]{1,2}[.-/\\s]*[०-९]{1,2}[.-/\\s]*[०-९]{2,4}]|" + // Hindi dates
-                "(?:[एक|दो|तीन|चार|पांच|छह|सात|आठ|नौ|दस|ग्यारह|बारह]\\s*[-/\\s]*)?(?:[जनवरी|फरवरी|मार्च|अप्रैल|मई|जून|जुलाई|अगस्त|सितंबर|अक्टूबर|नवंबर|दिसंबर]\\s*[-/\\s]*)?[०-९]{1,2}\\s*[-/\\s]*[०-९]{2,4})"; // Sanskrit dates
+    // Helper method to create a new ExtractedData instance and set common fields
+    private ExtractedData createNewExtractedDataInstance(
+            int dataPosition, String imageNo, String pandaName, String bahiName, String folioNo,
+            String district, String tehsil, String station, String postOffice, String cityVillage,
+            String fromWhichPlace, String caste, String subcaste, String ritualName,
+            String whoseRitual1, String whoseRitual2, String contactNo1, String contactNo2,
+            String flagsAndException, String additionalInforma) {
 
-        // Compile the regex pattern
-        Pattern pattern = Pattern.compile(datePattern);
-        Matcher matcher = pattern.matcher(text);
-
-        LocalDate lastDate = null;
-
-        // Find all matches
-        while (matcher.find()) {
-            String dateStr = matcher.group();
-            // Convert Devanagari numbers to English if necessary
-            String convertedDate = convertDevanagariNumbers(dateStr);
-            // Parse the date
-            lastDate = textParsingUtil.parseDate(convertedDate);
-        }
-
-        return lastDate; // Return the last found date
+        ExtractedData data = new ExtractedData();
+        data.setDataPosition(String.valueOf(dataPosition));
+        data.setImageNo(imageNo);
+        data.setPandaName(pandaName);
+        data.setBahiName(bahiName);
+        data.setFolioNo(folioNo);
+        data.setDistrict(district);
+        data.setTehsil(tehsil);
+        data.setStation(station);
+        data.setPostOffice(postOffice);
+        data.setCityVillage(cityVillage);
+        data.setFromWhichPlace(fromWhichPlace);
+        data.setCaste(caste);
+        data.setSubcaste(subcaste);
+        data.setRitualName(ritualName);
+        data.setWhoseRitual1(whoseRitual1);
+        data.setWhoseRitual2(whoseRitual2);
+        data.setContactNo1(contactNo1);
+        data.setContactNo2(contactNo2);
+        data.setFlagsAndException(flagsAndException);
+        data.setAdditionalInforma(additionalInforma);
+        // familyID is left blank as per instructions
+        return data;
     }
-
-
-
-    // Helper method to convert Devanagari numerals to English
-//    private String convertDevanagariNumbers(String devanagariDate) {
-//        return devanagariDate.chars()
-//                .map(c -> {
-//                    if (c >= 0x0966 && c <= 0x096F) { // Devanagari digits range
-//                        return c - 0x0966 + '0'; // Convert to ASCII digit
-//                    }
-//                    return c; // Keep other characters (like separators)
-//                })
-//                .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
-//                .toString();
-//    }
-    private String convertDevanagariNumbers(String dateStr) {
-        // Replace Devanagari digits with English digits
-        return dateStr.replace('०', '0')
-                .replace('१', '1')
-                .replace('२', '2')
-                .replace('३', '3')
-                .replace('४', '4')
-                .replace('५', '5')
-                .replace('६', '6')
-                .replace('७', '7')
-                .replace('८', '8')
-                .replace('९', '9');
-    }
-
-
 }
-
